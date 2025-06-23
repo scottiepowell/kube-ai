@@ -1,0 +1,32 @@
+# kustomization.yaml
+resources:
+  # 1) Upstream MetalLB install (CRDs, controller, speaker)
+  - https://raw.githubusercontent.com/metallb/metallb/v0.13.12/config/manifests/metallb-native.yaml
+
+  # 2) Your own resources (pool + L2Advertisement)
+  - ip-pool.yaml
+
+patches:
+  # only the controller *patch* belongs here
+  - target:
+      kind: Deployment
+      name: controller
+      namespace: metallb-system
+    patch: |
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: --webhook-mode=enabled
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: --cert-service-name=webhook-service
+  - target:
+      kind: DaemonSet
+      name: speaker
+      namespace: metallb-system
+    patch: |
+      - op: add
+        path: /spec/template/spec/containers/0/securityContext
+        value:
+          privileged: true
+          capabilities:
+            add: ["NET_ADMIN"]

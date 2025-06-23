@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    entrypoint: ["/bin/ollama"]
+    command: ["serve"]
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+      - OLLAMA_NUM_PARALLEL=1
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "/bin/ollama", "list"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
+
+  ollama-pull-mistral:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:               
+      - OLLAMA_HOST=http://ollama:11434
+    entrypoint: ["ollama", "pull", "mistral:7b-instruct-q4_0"]
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: on-failure
+
+  autogen:
+    image: ai/autogen:local
+    depends_on:
+      ollama-pull-mistral:
+        condition: service_completed_successfully
+    environment:
+      OLLAMA_URL: http://ollama:11434
+    ports:
+      - "8000:8000"
+
+volumes:
+  ollama-data:

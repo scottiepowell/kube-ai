@@ -1,0 +1,4 @@
+ag2[openai,ollama]==0.9.3
+fastapi
+uvicorn[standard]
+flaml[automl]

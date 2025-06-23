@@ -1,0 +1,50 @@
+# autogen-deploy.yaml
+# ------------------------------------------------------------
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autogen
+  namespace: ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: autogen
+  template:
+    metadata:
+      labels:
+        app: autogen
+    spec:
+      containers:
+      - name: api
+        image: ai/autogen:0.1              # built earlier; already imported to k3d
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8000
+        resources:
+          limits:
+            cpu: "500m"
+            memory: 1Gi
+          requests:
+            cpu: "250m"
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: autogen
+  namespace: ai
+spec:
+  selector:
+    app: autogen
+  type: LoadBalancer
+  loadBalancerIP: 192.168.1.202          # must be inside your MetalLB pool
+  ports:
+  - port: 80
+    targetPort: http
