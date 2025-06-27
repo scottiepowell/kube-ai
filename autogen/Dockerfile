@@ -1,16 +1,14 @@
-# ./autogen/Dockerfile
-FROM python:3.11-slim
-
-# system deps for llama-cpp & Ollama client if you later build wheels
-RUN apt-get update && apt-get install -y git build-essential && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-COPY configs/ ./configs
+FROM python:3.11-slim AS builder
+WORKDIR /wheels
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip wheel --extra-index-url https://download.pytorch.org/whl/cpu \
+    --wheel-dir /wheels -r requirements.txt
 
+FROM python:3.11-slim
+WORKDIR /app
+ENV PYTHONPATH="/app:${PYTHONPATH}"
+COPY --from=builder /wheels /wheels
+RUN pip install --no-cache-dir /wheels/*.whl && rm -rf /wheels
 COPY src/ ./src
-CMD ["python", "-m", "src.server"]      # FastAPI / Flask entrypoint
-
-# Use uvicorn to serve the FastAPI app on 0.0.0.0:8000
-CMD ["uvicorn", "src.server:app", "--host", "0.0.0.0", "--port", "8000"]
+COPY configs/ ./configs
+CMD ["uvicorn", "src.app_server:app", "--host", "0.0.0.0", "--port", "8000"]

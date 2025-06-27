@@ -1,0 +1,89 @@
+# --- autogen-config.yaml ----------------------------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: autogen-env
+  namespace: ai
+data:
+  OLLAMA_URL:       "http://ollama:11434"
+  ENABLE_CODE_EXEC: "false"
+  LOG_LEVEL:        "INFO"
+  LLM_TIMEOUT:      "45"          # give Mistral a bit more elbow room
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-cache
+  namespace: ai
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi               # models live here
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autogen
+  namespace: ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: autogen}
+  template:
+    metadata:
+      labels: {app: autogen}
+    spec:
+      initContainers:
+      - name: warm-models
+        image: ollama/ollama:latest
+        command:
+          - sh
+          - -c
+          - |
+            set -e
+            ollama pull mistral:7b-instruct-q4_K_M
+            ollama pull tinyllama:1.1b
+            echo hi | ollama run tinyllama:1.1b >/dev/null
+        volumeMounts:
+        - name: ollama-cache
+          mountPath: /root/.ollama
+      containers:
+      - name: ollama
+        image: ollama/ollama:latest
+        args: ["serve"]
+        ports: [{containerPort: 11434, name: api}]
+        volumeMounts: [{name: ollama-cache, mountPath: /root/.ollama}]
+        resources:
+          limits:   {cpu: "1",   memory: 2Gi}
+          requests: {cpu: "500m", memory: 1Gi}
+        livenessProbe:
+          httpGet: {path: /, port: api}
+          initialDelaySeconds: 20
+      - name: api
+        image: ai/autogen:0.1
+        envFrom: [{configMapRef: {name: autogen-env}}]
+        ports: [{containerPort: 8000, name: http}]
+        resources:
+          limits:   {cpu: "500m", memory: 1Gi}
+          requests: {cpu: "250m", memory: 512Mi}
+        readinessProbe:
+          httpGet: {path: /healthz, port: http}
+          initialDelaySeconds: 5
+      volumes:
+      - name: ollama-cache
+        persistentVolumeClaim: {claimName: ollama-cache}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: autogen
+  namespace: ai
+spec:
+  selector: {app: autogen}
+  type: LoadBalancer
+  loadBalancerIP: 192.168.1.202
+  ports:
+  - name: http
+    port: 80
+    targetPort: http

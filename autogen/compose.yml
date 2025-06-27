@@ -8,8 +8,8 @@ services:
     environment:
       - OLLAMA_HOST=0.0.0.0:11434
       - OLLAMA_NUM_PARALLEL=1
-    ports:
-      - "11434:11434"
+      - OLLAMA_MAX_LOADED_MODELS=1   # never hold both models
+    ports: ["11434:11434"]
     volumes:
       - ollama-data:/root/.ollama
     healthcheck:
@@ -18,27 +18,39 @@ services:
       timeout: 2s
       retries: 5
 
-  ollama-pull-mistral:
+  ollama-pull-models:
     image: ollama/ollama:latest
     depends_on:
       ollama:
         condition: service_healthy
-    environment:               
+    environment:
       - OLLAMA_HOST=http://ollama:11434
-    entrypoint: ["ollama", "pull", "mistral:7b-instruct-q4_0"]
-    volumes:
-      - ollama-data:/root/.ollama
+    entrypoint:
+      - sh
+      - -c
+      - |
+        set -e
+        ollama pull mistral:7b-instruct-q4_K_M
+        ollama pull tinyllama:1.1b
+        # warm the smaller model so first user call is quick
+        echo "hi" | ollama run tinyllama:1.1b > /dev/null
+    volumes: [ ollama-data:/root/.ollama ]
     restart: on-failure
 
   autogen:
-    image: ai/autogen:local
+    build: .
     depends_on:
-      ollama-pull-mistral:
+      ollama-pull-models:
         condition: service_completed_successfully
     environment:
       OLLAMA_URL: http://ollama:11434
-    ports:
-      - "8000:8000"
+      LOG_LEVEL: DEBUG                     # change to INFO for production
+      ENABLE_CODE_EXEC: "false"            # set to true to see the code blocks that the LLM generates
+      BIG_MODEL_RAM_GIB: "2.5"
+      SMALL_MODEL_RAM_GIB: "1.0"
+      LLM_TIMEOUT: "60"                    # single-call ceiling
+      LLM_FALLBACK_THRESHOLD: "20"         # invokes RAM check
+    ports: ["8000:8000"]
 
 volumes:
   ollama-data:
