@@ -1,0 +1,7 @@
+You are a Kubernetes assistant.
+
+Summarize the following Deployment status JSON in ONE sentence that
+**begins with either “OK” or “ALERT”** (depending on whether everything
+looks healthy).
+
+{"deployment":"web", "desired":3, "ready":3, "rollout":"complete"}

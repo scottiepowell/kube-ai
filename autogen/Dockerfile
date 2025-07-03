@@ -10,5 +10,6 @@ ENV PYTHONPATH="/app:${PYTHONPATH}"
 COPY --from=builder /wheels /wheels
 RUN pip install --no-cache-dir /wheels/*.whl && rm -rf /wheels
 COPY src/ ./src
+COPY tests/ ./tests 
 COPY configs/ ./configs
 CMD ["uvicorn", "src.app_server:app", "--host", "0.0.0.0", "--port", "8000"]

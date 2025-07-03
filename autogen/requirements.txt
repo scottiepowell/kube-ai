@@ -4,3 +4,4 @@ uvicorn[standard]
 flaml[automl]
 prometheus-client
 psutil
+pytest

@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai
+---
+# Shared env for the API container
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: autogen-env
+  namespace: ai
+data:
+  OLLAMA_URL:               "http://127.0.0.1:11434"
+  LOG_LEVEL:                "INFO"
+  ENABLE_CODE_EXEC:         "false"
+  BIG_MODEL_RAM_GIB:        "100"
+  SMALL_MODEL_RAM_GIB:      "1.0"
+  LLM_TIMEOUT:              "60"
+  LLM_FALLBACK_THRESHOLD:   "20"
+  AUTOGEN_USE_DOCKER:       "False"
+---
+# Ollama model cache lives here so pod restarts are fast
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-cache
+  namespace: ai
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 6Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autogen
+  namespace: ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: autogen}
+  template:
+    metadata:
+      labels: {app: autogen}
+    spec:
+      # --- 1. Ollama side-car -------------------------------------
+      containers:
+      - name: ollama
+        image: ollama/ollama:latest
+        args: ["serve"]
+        env: [{name: OLLAMA_HOST, value: "0.0.0.0:11434"}]
+        ports: [{name: ollama, containerPort: 11434}]
+        volumeMounts:
+          - name: cache
+            mountPath: /root/.ollama
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - sh
+                - -c
+                - |
+                  set -e
+                  echo "[warm-up] pulling models..."
+                  ollama pull tinyllama:1.1b
+                  echo "[warm-up] warming tinyllama..."
+                  echo hi | ollama run tinyllama:1.1b >/dev/null
+                  echo "[warm-up] done"
+        resources:
+          requests: {cpu: "1", memory: 2Gi}
+          limits:   {cpu: "4",   memory: 4Gi}
+        livenessProbe:
+          httpGet: {path: /, port: ollama}
+          initialDelaySeconds: 20
+      # --- 2. Autogen API -----------------------------------------
+      - name: api
+        image: ai/autogen:0.4         # ⬆ tag you built
+        imagePullPolicy: IfNotPresent
+        envFrom: [{configMapRef: {name: autogen-env}}]
+        ports: [{name: http, containerPort: 8000}]
+        resources:
+          requests: {cpu: "250m", memory: 512Mi}
+          limits:   {cpu: "500m", memory: 1Gi}
+        readinessProbe:
+          httpGet: {path: /healthz, port: http}
+          initialDelaySeconds: 5
+      volumes:
+        - name: cache
+          persistentVolumeClaim: {claimName: ollama-cache}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: autogen
+  namespace: ai
+  labels:
+    app: autogen
+spec:
+  selector: {app: autogen}
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

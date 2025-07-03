@@ -1,0 +1,21 @@
+# autogen-ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: autogen
+  namespace: ai
+  annotations:
+    # Traefik: expose on web + websecure
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+spec:
+  rules:
+    - host: ai.localhost   # use /etc/hosts or real DNS later
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: autogen
+                port:
+                  number: 80

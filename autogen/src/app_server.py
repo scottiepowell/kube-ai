@@ -203,4 +203,13 @@ app = FastAPI()
 try:
     app = AppServer().app
 except RuntimeError as e:
-    app.add_api_route("/healthz", lambda: JSONResponse({"error": str(e)}), methods=["GET"])
+    error_message = str(e)
+    app = FastAPI()
+
+    @app.get("/healthz")
+    def healthz():
+        return {"error": error_message}
+else:
+    @app.get("/healthz")
+    def healthz():
+        return {"status": "ok"}

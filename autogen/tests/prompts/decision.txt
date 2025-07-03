@@ -1,0 +1,8 @@
+Ingress latency has spiked from 50 ms to 800 ms during the past 3 minutes.
+
+Candidate actions:
+(A) Scale the front-end Deployment
+(B) Restart the ingress controller
+(C) Do nothing
+
+Choose the single best letter and justify your choice in < 50 words.

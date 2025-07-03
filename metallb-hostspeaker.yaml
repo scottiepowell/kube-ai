@@ -1,0 +1,28 @@
+# metallb-hostspeaker.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: speaker-host
+  namespace: metallb-system
+spec:
+  selector:
+    matchLabels: {app: metallb, component: speaker-host}
+  template:
+    metadata:
+      labels: {app: metallb, component: speaker-host}
+    spec:
+      hostNetwork: true       # ← runs in the VM’s own network NS
+      tolerations:
+        - key: "node-role.kubernetes.io/control-plane"
+          effect: NoSchedule
+      containers:
+        - name: speaker
+          image: quay.io/metallb/speaker:v0.13.12
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: METALLB_NODE_NAME
+              valueFrom: {fieldRef: {fieldPath: spec.nodeName}}
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["NET_ADMIN"]
