@@ -75,7 +75,7 @@ spec:
           initialDelaySeconds: 20
       # --- 2. Autogen API -----------------------------------------
       - name: api
-        image: k3d-registry.localhost:5000/ai/autogen:0.4
+        image: registry.localhost:5000/ai/autogen:0.4
         imagePullPolicy: IfNotPresent
         envFrom: [{configMapRef: {name: autogen-env}}]
         ports: [{name: http, containerPort: 8000}]

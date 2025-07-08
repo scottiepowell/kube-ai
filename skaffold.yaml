@@ -1,0 +1,57 @@
+# skaffold.yaml – apiVersion v4beta8
+apiVersion: skaffold/v4beta8
+kind: Config
+metadata:
+  name: autogen
+
+############################################################
+# 1.  BUILD
+############################################################
+build:
+  local:
+    push: false
+  artifacts:
+  - image: ai/autogen
+    context: autogen
+    docker:
+      dockerfile: Dockerfile
+    sync:
+      manual:
+      - src: "src/**/*.py"
+        dest: "/app/src"
+      - src: "tests/**/*.py"
+        dest: "/app/tests"
+    hooks:                         # per-artifact hook
+      after:
+      - command:
+        - k3d
+        - image
+        - import
+        - registry.localhost:5000/ai/autogen:{{.IMAGE_TAG}}
+        - -c
+        - ai
+
+############################################################
+# 2.  MANIFEST RENDERING
+############################################################
+manifests:
+  rawYaml:                         # <-- this replaces the old “deploy.kubectl.manifests”
+  - autogen-k8s.yaml
+  - autogen-ingress.yaml
+
+############################################################
+# 3.  DEPLOY
+############################################################
+deploy:
+  kubectl: {}                     # nothing else needed – it deploys the rendered output
+
+############################################################
+# 4.  PROFILE
+############################################################
+profiles:
+- name: dev
+  portForward:
+  - resourceType: service
+    resourceName: autogen
+    port: 80
+    localPort: 8000
