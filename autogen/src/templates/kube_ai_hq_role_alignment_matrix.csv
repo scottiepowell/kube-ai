@@ -1,0 +1,27 @@
+Category,Army Role,Kubernetes/AI Function,Model Tier,Example Tasks
+Command Group,Division Commander (CG),End User / General,N/A,Issues high-level requests: “Deploy Ghost website with replicas.”
+Command Group,Deputy Commanding General(s),Planner Agent,Large (Mistral),"Decomposes user intent into workflows, sets priorities, allocates agents."
+Command Group,Chief of Staff (COS),Workflow Orchestrator Agent,Medium,"Runs scheduling, synchronizes all agents, maintains cluster operational rhythm."
+Command Group,Command Sergeant Major (CSM),Policy Enforcer Agent,Medium,"Enforces standards, validates configs, monitors compliance."
+Command Group,Aide-de-Camp / Executive Staff,Prompt Manager / Session Manager,Small,"Manages user sessions, context, and request history."
+Coordinating Staff,G-1 (Personnel),Resource Quota Manager Agent,Small,"Manages node allocations, replica counts, and quotas."
+Coordinating Staff,G-2 (Intelligence),Debugger / Troubleshooter Agent,Medium,"“Enemy intel”: Broke services, logs analysis, anomaly detection."
+Coordinating Staff,G-3 (Operations),Deployment/Scaling Agent,Medium,"Creates/updates workloads, scales deployments, orchestrates pod movement."
+Coordinating Staff,G-4 (Logistics),Storage & Volume Manager Agent,Medium,"Manages PersistentVolumeClaims, storage class assignment, backups."
+Coordinating Staff,G-5 (Plans),Future Operations Planner Agent,Medium,"Pre-stages manifests, plans blue-green upgrades, defines sequencing."
+Coordinating Staff,G-6 (Signal),Network & Ingress Agent,Small,"Configures services, ingress rules, certificates."
+Coordinating Staff,G-7 (Effects / Info Ops),Alerting & Notifier Agent,Small,"Disseminates alerts, informs users, triggers Slack/webhook notifications."
+Coordinating Staff,G-8 (Financial Management),Quota Cost/Resource Budget Analyst Agent,Small,"Reports usage, enforces limits to prevent resource exhaustion."
+Coordinating Staff,G-9 (Civil Affairs),Cluster Environment Manager Agent,Medium,"Integrates with external services, configures dev/test/prod environments."
+Coordinating Staff,Chief of Fires / DFSCOORD,Autoscaler Agent,Medium,Identifies high-load deployments and scales resources (“fires support”).
+Coordinating Staff,Chief of Protection,Security Policy Agent,Medium,"Enforces network policies, PodSecurityPolicies, image scanning."
+Special Staff,Cyber-EW Officer,Security/Threat Hunting Agent,Medium,"Scans for suspicious containers, audits RBAC for privilege escalation."
+Special Staff,Engineer Officer,Infrastructure Provisioning Agent,Medium,"Manages cluster nodes, node pools, and volume provisioning."
+Special Staff,Space Operations Officer,External Cloud Integration Agent,Medium,"Ties in remote resources (e.g., S3 buckets, external cloud APIs)."
+Special Staff,Equal Opportunity Advisor,Policy Consistency Agent,Small,Ensures configurations are applied equally across namespaces.
+Special Staff,Knowledge Management Officer,Documentation & Manifest Tracker Agent,Small,"Archives manifests, keeps track of deployed versions, builds manifest catalogs."
+Special Staff,Public Affairs Officer,Reporter Agent,Small,Summarizes activities in daily reports.
+Special Staff,Provost Marshal,Audit & Compliance Agent,Medium,Investigates security breaches or policy violations.
+Personal Staff,Chaplain,Wellness / Health Monitor Agent,Small,"Monitors cluster health status, provides status dashboards (“spiritual wellness”)."
+Personal Staff,Inspector General (IG),Audit Trail & Integrity Agent,Medium,Reviews logs and compliance history.
+Personal Staff,Staff Judge Advocate (SJA),Policy & RBAC Validator Agent,Medium,"Reviews security policies and validates legal configurations (RBAC, NetworkPolicy)."
