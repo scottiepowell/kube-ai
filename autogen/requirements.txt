@@ -1,7 +1,10 @@
 ag2[openai,ollama]==0.9.3
+autogen-agentchat>=0.6.4
+autogen-ext[ollama]>=0.6.4
 fastapi
 uvicorn[standard]
 flaml[automl]
 prometheus-client
 psutil
 pytest
+tiktoken

@@ -1,7 +1,7 @@
 import os
 import time
 import asyncio
-import json
+import json, re
 import logging
 from contextlib import asynccontextmanager
 
@@ -14,6 +14,7 @@ from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_
 from autogen import AssistantAgent, UserProxyAgent
 from autogen.llm_config import LLMConfig
 from autogen.oai.ollama import OllamaLLMConfigEntry
+from autogen.agentchat.callbacks import register_callback
 
 # --------------------------------------------------------------------------- #
 # ENV
@@ -57,19 +58,30 @@ class AppServer:
     # Agent factory
     # ------------------------------------------------------------------ #
     def _build_agents(self, model: str):
-        entry = OllamaLLMConfigEntry(model=model, api_key="ollama", client_host=OLLAMA_HOST)
-        cfg = LLMConfig(config_list=[entry], temperature=0.2)
+        entry = OllamaLLMConfigEntry(
+            model=model,
+            api_key="ollama",
+            client_host=OLLAMA_HOST,
+            # ↓ token & style caps
+            max_tokens=350,          # hard stop at 350 gen-tokens :contentReference[oaicite:0]{index=0}
+            temperature=0.1,         # snappier, less rambling  :contentReference[oaicite:1]{index=1}
+        )
+        # no need to repeat temperature here because it’s copied from the entry
+        cfg = LLMConfig(config_list=[entry])
 
-        code_cfg = {} if ENABLE_CODE_EXEC else False
+        system_msg = (
+    "Respond with only the requested JSON/YAML – no markdown fences, no explanations, no code. Terminate output with the literal string ---END---."
+)
+
         assistant = AssistantAgent(
             "ops-assistant",
             llm_config=cfg,
+            system_message=system_msg,  # 👈 forces terse YAML output  :contentReference[oaicite:2]{index=2}
             human_input_mode="NEVER",
-            code_execution_config=code_cfg,
+            code_execution_config=False,
         )
         user = UserProxyAgent("user", human_input_mode="NEVER")
         return assistant, user
-
     # ------------------------------------------------------------------ #
     # RAM-based chooser
     # ------------------------------------------------------------------ #

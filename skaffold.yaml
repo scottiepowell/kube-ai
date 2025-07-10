@@ -17,19 +17,12 @@ build:
       dockerfile: Dockerfile
     sync:
       manual:
-      - src: "src/**/*.py"
-        dest: "/app/src"
-      - src: "tests/**/*.py"
-        dest: "/app/tests"
+      - src: "src/**"
+        dest: "/app"
+      - src: "tests/**"
+        dest: "/app"
     hooks:                         # per-artifact hook
-      after:
-      - command:
-        - k3d
-        - image
-        - import
-        - registry.localhost:5000/ai/autogen:{{.IMAGE_TAG}}
-        - -c
-        - ai
+      after: []
 
 ############################################################
 # 2.  MANIFEST RENDERING

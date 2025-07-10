@@ -1,16 +1,4 @@
-﻿MDMP Step,Army Staff Lead (alias),AI Agent & Core Task,Model Tier,Key Outputs / Checks
-1 – Receipt of Mission (api.army.mil),COS / G-3 (Current Ops),"Mission-Intake Agent – parses user prompt, logs intent, sets initial facts",Small (.5 B),"Mission log entry; identifies “Ghost v× image, 3 replicas, PVC, HPA”"
-"2 – Mission Analysis (api.army.mil, armyuniversity.edu)",G-2 (Intel),"Requirements-Analyzer Agent – expands nine topic buckets (Security, Storage, HPA, …)",Medium (1-2 B),"Requirements matrix referencing TLS/cert-manager (cert-manager.io), NetworkPolicies (kubernetes.io), PVC class (kubernetes.io)"
-,G-1 (Personnel),Quota-Planner Agent – checks namespace CPU/RAM quotas,Small,Updated ResourceQuota; budget report
-3 – COA Development (api.army.mil),G-5 (Plans),"Design-Engineer Agent – drafts helm/kustomize manifests; selects storage class, Ingress, TLS, HPA spec (forum.ghost.org, kubernetes.io)",Medium,Draft Ghost Helm values; PVC ≥ 5 GiB; HPA at 50 % CPU; Ingress w/ cert-manager Issuer
-4 – COA Analysis (Wargame) (api.army.mil),G-3 (Future Ops),Simulation Agent – runs kubectl apply --dry-run + policy test; evaluates PDB (kubernetes.io) & disruption risk (kubernetes.io),Medium,Risk table; recommends PDB minAvailable:2; flags pod-security gaps (docs.bitnami.com)
-5 – COA Comparison (api.army.mil),COS + all G-staff,"Scoring Agent – ranks options by availability, resource cost, security score",Small,Decision matrix; top COA highlighted
-6 – COA Approval (api.army.mil),Commander,Chat-Approval Agent – presents summary; waits for “Approve → Yes”,N/A,Signed-off plan (chat reaction)
-7 – Orders Production & Transition (api.army.mil),G-3 (Ops) + G-5,Execution Agent – commits manifests to Git; Argo CD syncs cluster (argo-cd.readthedocs.io),Medium,Git commit; Argo CD Application Synced
-—,Chief of Protection,"Security-Sentinel Agent – enforces NetworkPolicy (kubernetes.io), scans images",Small,Pass/Fail report; SealedSecret manifest (bitnami.com)
-—,Chief of Fires / Autoscaler,HPA-Operator Agent – monitors CPU; adjusts replicas via HPA (kubernetes.io),Small,Live replica count events
-—,G-4 (Logistics),Backup-Ops Agent – schedules PVC snapshots; exports to S3,Medium,CronJob YAML; snapshot policy
-—,G-7 (Effects),Alert-Relay Agent – routes Prometheus alerts (prometheus.io) to Slack,Small,Alert rules & Slack webhook
-—,G-6 (Signal),Ingress-DNS Agent – applies cert-manager issuers & records A/AAAA in DNS (cert-manager.io),Small,Valid TLS‐certified host
-—,Knowledge Mgt Officer,"Observability-Collector Agent – deploys Fluent Bit (docs.fluentbit.io), Grafana dashboards (grafana.com)",Small,Kibana/Loki index; Grafana UID link
-—,PAO,"Reporter Agent – daily digest of HPA events, backups, alerts",Small,Markdown status pushed to repo Wiki
+﻿MDMP Step,Agent,Prompt Template,Expected Out
+1 – Receipt,Mission-Intake,"«TASK: extract parameters … FORMAT: JSON → {""image"":"""",""replicas"":3,…}»",JSON only
+2 – Analysis,Requirements-Analyzer,"«Given <PREV> JSON, list missing Kubernetes primitives. FORMAT: • bullets»",bullets
+3 – COA Dev,Design-Engineer,"«Generate ONE Helm values.yaml block … End with ---END---»",YAML
